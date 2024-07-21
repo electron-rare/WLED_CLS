@@ -143,7 +143,7 @@ class Bus {
 
     virtual bool hasRGB(void) { return Bus::hasRGB(_type); }
     static  bool hasRGB(uint8_t type) {
-      if ((type >= TYPE_WS2812_1CH && type <= TYPE_WS2812_WWA) || type == TYPE_ANALOG_1CH || type == TYPE_ANALOG_2CH || type == TYPE_ONOFF) return false;
+      if ((type >= TYPE_TM1934_WWA && type <= TYPE_WS2812_WWA) || type == TYPE_ANALOG_1CH || type == TYPE_ANALOG_2CH || type == TYPE_ONOFF) return false;
       return true;
     }
     virtual bool hasWhite(void) { return Bus::hasWhite(_type); }
@@ -156,7 +156,9 @@ class Bus {
     virtual bool hasCCT(void) { return Bus::hasCCT(_type); }
     static  bool hasCCT(uint8_t type) {
       if (type == TYPE_WS2812_2CH_X3 || type == TYPE_WS2812_WWA ||
-          type == TYPE_ANALOG_2CH    || type == TYPE_ANALOG_5CH) return true;
+          type == TYPE_ANALOG_2CH    || type == TYPE_ANALOG_5CH 
+          || type == TYPE_TM1934_WWA
+          ) return true;
       return false;
     }
     static void setCCT(uint16_t cct) {

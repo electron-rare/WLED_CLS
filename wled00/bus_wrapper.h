@@ -101,6 +101,13 @@
 #define I_32_I1_UCS_4 62
 //Bit Bang theoratically possible, but very undesirable and not needed (no pin restrictions on RMT and I2S)
 
+// ! add new bus types here !
+//TM1934 (Warm White, Middle White, Cold White)
+#define I_32_RN_TM3_4 63
+#define I_32_U1_TM3_4 64
+#define I_32_DM_TM3_4 65
+#define I_32_BB_TM3_4 66
+
 //APA102
 #define I_HS_DOT_3 39 //hardware SPI
 #define I_SS_DOT_3 40 //soft SPI
@@ -166,6 +173,15 @@
 
 /*** ESP32 Neopixel methods ***/
 #ifdef ARDUINO_ARCH_ESP32
+
+//TM1934 (Warm White, Middle White, Cold White)
+#define B_32_RN_NEO_3 NeoPixelBusLg<NeoGrbFeature, NeoEsp32RmtNTM2934Method, NeoGammaNullMethod>
+#ifndef WLED_NO_I2S0_PIXELBUS
+#define B_32_I0_NEO_3 NeoPixelBusLg<NeoGrbFeature, NeoEsp32I2s0800KbpsMethod, NeoGammaNullMethod>
+#endif
+#ifndef WLED_NO_I2S1_PIXELBUS
+#define B_32_I1_NEO_3 NeoPixelBusLg<NeoGrbFeature, NeoEsp32I2s1800KbpsMethod, NeoGammaNullMethod>
+#endif
 //RGB
 #define B_32_RN_NEO_3 NeoPixelBusLg<NeoGrbFeature, NeoEsp32RmtNWs2812xMethod, NeoGammaNullMethod>
 #ifndef WLED_NO_I2S0_PIXELBUS
@@ -707,6 +723,8 @@ class PolyBus {
       case  3: col.G = r; col.R = b; col.B = g; break; //3 = RBG
       case  4: col.G = b; col.R = g; col.B = r; break; //4 = BGR
       case  5: col.G = g; col.R = b; col.B = r; break; //5 = GBR
+      // TODO add for tri-white LEDs
+      // case  6: col.CW = r; col.MW = g; col.WW = b; break; //6 = Cold white, Middle white, Warm white
     }
     // upper nibble contains W swap information
     switch (co >> 4) {
@@ -1154,7 +1172,9 @@ class PolyBus {
       #ifdef ESP8266
       uint8_t offset = pins[0] -1; //for driver: 0 = uart0, 1 = uart1, 2 = dma, 3 = bitbang
       if (offset > 3) offset = 3;
+            // ! add Led type here !
       switch (busType) {
+        case TYPE_TM1934:
         case TYPE_WS2812_1CH_X3:
         case TYPE_WS2812_2CH_X3:
         case TYPE_WS2812_RGB:
@@ -1192,7 +1212,11 @@ class PolyBus {
       if (num > 9) return I_NONE;
       if (num > 7) offset = num -7;
       #endif
+      // ! add Led type here !
       switch (busType) {
+        case TYPE_TM1934:
+        case TYPE_TM1934_WWA:
+          return I_32_RN_NEO_3 + offset;
         case TYPE_WS2812_1CH_X3:
         case TYPE_WS2812_2CH_X3:
         case TYPE_WS2812_RGB:
