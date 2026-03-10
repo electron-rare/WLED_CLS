@@ -4550,9 +4550,6 @@ uint16_t mode_aurora(void) {
 
   AuroraWave* waves;
 
-//TODO: I am not sure this is a correct way of handling memory allocation since if it fails on 1st run
-// it will display static effect but on second run it may crash ESP since data will be nullptr
-
   if(SEGENV.aux0 != SEGMENT.intensity || SEGENV.call == 0) {
     //Intensity slider changed or first call
     SEGENV.aux1 = map(SEGMENT.intensity, 0, 255, 2, W_MAX_COUNT);
@@ -4571,7 +4568,14 @@ uint16_t mode_aurora(void) {
     waves = reinterpret_cast<AuroraWave*>(SEGENV.data);
   }
 
-  for (int i = 0; i < SEGENV.aux1; i++) {
+  if (!waves || SEGENV.aux1 <= 0) {
+    // Reset allocator state and fall back to static mode when segment data is unavailable.
+    SEGENV.aux0 = 0;
+    return mode_static();
+  }
+  const uint16_t waveCount = static_cast<uint16_t>(SEGENV.aux1);
+
+  for (uint16_t i = 0; i < waveCount; i++) {
     //Update values of wave
     waves[i].update(SEGLEN, SEGMENT.speed);
 
@@ -4586,15 +4590,15 @@ uint16_t mode_aurora(void) {
   if (SEGCOLOR(1)) backlight++;
   if (SEGCOLOR(2)) backlight++;
   //Loop through LEDs to determine color
-  for (int i = 0; i < SEGLEN; i++) {
+  for (uint16_t i = 0; i < SEGLEN; i++) {
     CRGB mixedRgb = CRGB(backlight, backlight, backlight);
 
     //For each LED we must check each wave if it is "active" at this position.
     //If there are multiple waves active on a LED we multiply their values.
-    for (int  j = 0; j < SEGENV.aux1; j++) {
+    for (uint16_t j = 0; j < waveCount; j++) {
       CRGB rgb = waves[j].getColorForLED(i);
 
-      if(rgb != CRGB(0)) {
+      if (rgb.r || rgb.g || rgb.b) {
         mixedRgb += rgb;
       }
     }
@@ -5305,12 +5309,12 @@ uint16_t mode_2Dmetaballs(void) {   // Metaballs by Stefan Petrick. Cannot have 
       } else {
         SEGMENT.setPixelColorXY(x, y, SEGMENT.color_from_palette(0, false, PALETTE_SOLID_WRAP, 0));
       }
-      // show the 3 points, too
-      SEGMENT.setPixelColorXY(x1, y1, WHITE);
-      SEGMENT.setPixelColorXY(x2, y2, WHITE);
-      SEGMENT.setPixelColorXY(x3, y3, WHITE);
     }
   }
+  // show the 3 points, too
+  SEGMENT.setPixelColorXY(x1, y1, WHITE);
+  SEGMENT.setPixelColorXY(x2, y2, WHITE);
+  SEGMENT.setPixelColorXY(x3, y3, WHITE);
 
   return FRAMETIME;
 } // mode_2Dmetaballs()
