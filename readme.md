@@ -82,3 +82,61 @@ If you still want to try, don't use strobe, lighting or noise modes or high effe
 
 As per the MIT license, I assume no liability for any damage to you or any other person or equipment.  
 
+## Firmware memory budget gate (local fork)
+
+Use the local guardrail script to validate RAM/Flash budget for the active PlatformIO environment:
+
+```bash
+./tools/check_memory_budget.sh --env ClemS-ESP32-to-5-LEDs --max-ram 75 --max-flash 85 --yes
+```
+
+The script runs `python3 -m platformio run`, parses `RAM:` and `Flash:` lines, and returns non-zero when thresholds are exceeded.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- CHANTIER:AUDIT START -->
+## Audit & Execution Plan (2026-03-10)
+
+### Snapshot
+- Priority: `P2`
+- Tech profile: `node+python+embedded+cpp/cmake`
+- Workflows: `yes`
+- Tests: `yes`
+- Debt markers: `40`
+- Source files: `207`
+
+### Corrections Prioritaires
+- [x] Vérifier target PlatformIO et budget mémoire
+- [x] Ajouter/fiabiliser les commandes de vérification automatiques.
+- [ ] Clore les points bloquants avant optimisation avancée.
+
+### Optimisation
+- [ ] Identifier le hotspot principal et mesurer avant/après.
+- [ ] Réduire la complexité des modules les plus touchés.
+
+### Mémoire chantier
+- Control plane: `/Users/electron/.codex/memories/electron_rare_chantier`
+- Repo card: `/Users/electron/.codex/memories/electron_rare_chantier/REPOS/WLED_CLS.md`
+
+<!-- CHANTIER:AUDIT END -->
