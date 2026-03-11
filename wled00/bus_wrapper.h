@@ -174,14 +174,7 @@
 /*** ESP32 Neopixel methods ***/
 #ifdef ARDUINO_ARCH_ESP32
 
-//TM1934 (Warm White, Middle White, Cold White)
-#define B_32_RN_NEO_3 NeoPixelBusLg<NeoGrbFeature, NeoEsp32RmtNTM2934Method, NeoGammaNullMethod>
-#ifndef WLED_NO_I2S0_PIXELBUS
-#define B_32_I0_NEO_3 NeoPixelBusLg<NeoGrbFeature, NeoEsp32I2s0800KbpsMethod, NeoGammaNullMethod>
-#endif
-#ifndef WLED_NO_I2S1_PIXELBUS
-#define B_32_I1_NEO_3 NeoPixelBusLg<NeoGrbFeature, NeoEsp32I2s1800KbpsMethod, NeoGammaNullMethod>
-#endif
+//TM1934 currently reuses the generic NEO_3 transport mapping below.
 //RGB
 #define B_32_RN_NEO_3 NeoPixelBusLg<NeoGrbFeature, NeoEsp32RmtNWs2812xMethod, NeoGammaNullMethod>
 #ifndef WLED_NO_I2S0_PIXELBUS

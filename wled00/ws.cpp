@@ -99,7 +99,7 @@ void wsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventTyp
 void sendDataWs(AsyncWebSocketClient * client)
 {
   if (!ws.count()) return;
-  AsyncWebSocketMessageBuffer * buffer;
+  char * payload = nullptr;
 
   if (!requestJSONBufferLock(12)) return;
 
@@ -112,42 +112,36 @@ void sendDataWs(AsyncWebSocketClient * client)
   DEBUG_PRINTF("JSON buffer size: %u for WS request (%u).\n", doc.memoryUsage(), len);
 
   size_t heap1 = ESP.getFreeHeap();
+  (void)heap1;
   DEBUG_PRINT(F("heap ")); DEBUG_PRINTLN(ESP.getFreeHeap());
   #ifdef ESP8266
   if (len>heap1) {
     DEBUG_PRINTLN(F("Out of memory (WS)!"));
+    releaseJSONBufferLock();
     return;
   }
   #endif
-  buffer = ws.makeBuffer(len); // will not allocate correct memory sometimes on ESP8266
-  #ifdef ESP8266
-  size_t heap2 = ESP.getFreeHeap();
-  DEBUG_PRINT(F("heap ")); DEBUG_PRINTLN(ESP.getFreeHeap());
-  #else
-  size_t heap2 = 0; // ESP32 variants do not have the same issue and will work without checking heap allocation
-  #endif
-  if (!buffer || heap1-heap2<len) {
+  payload = static_cast<char*>(malloc(len + 1U));
+  if (!payload) {
     releaseJSONBufferLock();
     DEBUG_PRINTLN(F("WS buffer allocation failed."));
     ws.closeAll(1013); //code 1013 = temporary overload, try again later
     ws.cleanupClients(0); //disconnect all clients to release memory
-    ws._cleanBuffers();
     return; //out of memory
   }
 
-  buffer->lock();
-  serializeJson(doc, (char *)buffer->get(), len);
+  serializeJson(doc, payload, len + 1U);
+  payload[len] = '\0';
 
   DEBUG_PRINT(F("Sending WS data "));
   if (client) {
-    client->text(buffer);
+    client->text(payload, len);
     DEBUG_PRINTLN(F("to a single client."));
   } else {
-    ws.textAll(buffer);
+    ws.textAll(payload, len);
     DEBUG_PRINTLN(F("to multiple clients."));
   }
-  buffer->unlock();
-  ws._cleanBuffers();
+  free(payload);
 
   releaseJSONBufferLock();
 }
@@ -167,9 +161,8 @@ bool sendLiveLedsWs(uint32_t wsClient)
   size_t pos = (strip.isMatrix ? 4 : 2);  // start of data
   size_t bufSize = pos + (used/n)*3;
 
-  AsyncWebSocketMessageBuffer * wsBuf = ws.makeBuffer(bufSize);
-  if (!wsBuf) return false; //out of memory
-  uint8_t* buffer = wsBuf->get();
+  uint8_t* buffer = static_cast<uint8_t*>(malloc(bufSize));
+  if (!buffer) return false; //out of memory
   buffer[0] = 'L';
   buffer[1] = 1; //version
 
@@ -208,7 +201,8 @@ bool sendLiveLedsWs(uint32_t wsClient)
     buffer[pos++] = scale8(qadd8(w, b), strip.getBrightness()); //B
   }
 
-  wsc->binary(wsBuf);
+  wsc->binary(buffer, bufSize);
+  free(buffer);
   return true;
 }
 
